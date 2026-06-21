@@ -6,10 +6,6 @@ if not ConVarExists("hg_newspectate") then
     CreateClientConVar("hg_newspectate", "1", true, false, "Enables smooth spectator camera transitions", 0, 1)
 end
 
-function CurrentRound()
-	return zb.modes[zb.CROUND]
-end
-
 zb.ROUND_STATE = 0
 --0 = players can join, 1 = round is active, 2 = endround
 local vecZero = Vector(0.2, 0.2, 0.2)

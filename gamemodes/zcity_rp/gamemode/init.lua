@@ -9,8 +9,9 @@ include("shared.lua")
 AddCSLuaFile("loader.lua")
 include("loader.lua")
 
+
 local PLAYER = FindMetaTable("Player")
-function PLAYER:CanSpawn()
+function PLAYER:CanSpawn()	
 	return ( CurrentRound and CurrentRound() and CurrentRound().CanSpawn and CurrentRound():CanSpawn(self)) or (zb.ROUND_STATE == 0)
 end
 
@@ -549,3 +550,4 @@ hook.Add("CanProperty", "AntiExploit", function(ply, property, ent)
 		return false
 	end
 end)
+

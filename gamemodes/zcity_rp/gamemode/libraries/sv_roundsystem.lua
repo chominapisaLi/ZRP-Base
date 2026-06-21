@@ -1,3 +1,5 @@
+/*
+
 local player_GetAll = player.GetAll
 zb.modes = zb.modes or {}
 
@@ -72,22 +74,7 @@ hook.Add("CanListenOthers","RoundStartChat",function(output, input, isChat, team
 end)
 
 function zb:EndRound()
-	zb.ROUND_STATE = 3
-	zb.Roundscount = (zb.Roundscount or 0) + 1
-
-	local mode, round = CurrentRound()
-
-	net.Start("RoundInfo")
-		net.WriteString(mode.name or "hmcd")
-		net.WriteInt(zb.ROUND_STATE, 4)
-	net.Broadcast()
-
-	--PrintMessage(HUD_PRINTTALK, "Раунд закончен.")
-	CurrentRound():EndRound()
-	hook.Run("ZB_EndRound")
-	zb.AddFade()
-
-	hg.achievements.SavePlayerAchievements()
+	return
 end
 
 function zb:CheckWinner(tbl)
@@ -395,14 +382,14 @@ function zb.WeightedChanceMode(modes_chances)
 end
 
 function zb.GetWorldSize()
-	/*
+	
 	local world = game.GetWorld()
 	local worldMin = world:GetInternalVariable("m_WorldMins")
 	local worldMax = world:GetInternalVariable("m_WorldMaxs")
 	local size = worldMin:Distance(worldMax)
 
 	return size + (zb.BigMaps[ game.GetMap() ] and 5000 or 0)
-	*/
+	
 
 	local dist = 0
 	local pts = zb.GetMapPoints( "RandomSpawns" )
@@ -867,3 +854,5 @@ if SERVER then
 	end)
 
 end
+
+*/

@@ -1,7 +1,7 @@
 local PANEL = {}
 
 local blur = Material("pp/blurscreen")
-local scale = 0.02
+local scale = 0.01
 local scalew = sw / 40
 local scaleh = sh / 40
 
