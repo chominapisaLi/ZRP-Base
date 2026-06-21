@@ -1,5 +1,5 @@
-# ZRP-Base
--# Base for RP projects 
+# ZRP-Base 
+Base for RP projects 
 
 As for now:
  - Nothing was changed from original Z-City 
@@ -13,4 +13,4 @@ Plans:
 
 If you are using this as the base for your server please contact -> `thebogler` and don't change gamemode please..
 
--#Z-Fork is real
+#### ZRP is real.
