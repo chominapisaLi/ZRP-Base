@@ -10,6 +10,7 @@ Plans:
  - Be god-like and don't use AI for shitty code.
  - Put some settings for it.
  - Don't use ULX and other shitty admin panels
+ - Remove shit from content of zcity to be lightweight
 
 If you are using this as the base for your server please contact -> `thebogler` and don't change gamemode please..
 
