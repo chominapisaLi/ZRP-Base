@@ -14,4 +14,4 @@ Plans:
 
 If you are using this as the base for your server please contact -> `thebogler` and don't change gamemode please..
 
-#### ZRP is real.
+#### ZRP is for real.
