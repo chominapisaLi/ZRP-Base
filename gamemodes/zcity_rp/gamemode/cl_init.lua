@@ -98,158 +98,6 @@ local keydownattack
 local keydownattack2
 local keydownreload
 
-hook.Add("HUDPaint","FUCKINGSAMENAMEUSEDINHOOKFUCKME",function()
-    if LocalPlayer():Alive() then return end
-	local spect = LocalPlayer():GetNWEntity("spect")
-	if not IsValid(spect) then return end
-	if viewmode == 3 then return end
-	
-	surface.SetFont("HomigradFont")
-	surface.SetTextColor(255, 255, 255, 255)
-	local txt = "Spectating player: "..spect:Name()
-	local w, h = surface.GetTextSize(txt)
-	surface.SetTextPos(ScrW() / 2 - w / 2, ScrH() / 8 * 7)
-	surface.DrawText(txt)
-	local txt = "In-game name: "..spect:GetPlayerName()
-	local w, h = surface.GetTextSize(txt)
-	surface.SetTextPos(ScrW() / 2 - w / 2, ScrH() / 8 * 7 + h)
-	surface.DrawText(txt)
-end)
-
-hook.Add("HG_CalcView", "zzzzzzzUwU", function(ply, pos, angles, fov)
-	if not lply:Alive() then
-		if lply:KeyDown(IN_ATTACK) then
-			if not keydownattack then
-				keydownattack = true
-				net.Start("ZB_ChooseSpecPly")
-				net.WriteInt(IN_ATTACK,32)
-				net.SendToServer()
-			end
-		else
-			keydownattack = false
-		end
-
-		if lply:KeyDown(IN_ATTACK2) then
-			if not keydownattack2 then
-				keydownattack2 = true
-				net.Start("ZB_ChooseSpecPly")
-				net.WriteInt(IN_ATTACK2,32)
-				net.SendToServer()
-			end
-		else
-			keydownattack2 = false
-		end
-
-		if lply:KeyDown(IN_RELOAD) then
-			if not keydownreload then
-				keydownreload = true
-				net.Start("ZB_ChooseSpecPly")
-				net.WriteInt(IN_RELOAD,32)
-				net.SendToServer()
-			end
-		else
-			keydownreload = false
-		end
-
-		local spect = lply:GetNWEntity("spect",spect)
-		if not IsValid(spect) then return end
-
-		local viewmode = lply:GetNWInt("viewmode",viewmode)
-		
-		if viewmode == 3 then
-			if lply:GetMoveType()!=MOVETYPE_NOCLIP then
-				lply:SetMoveType(MOVETYPE_NOCLIP)
-			end
-			lply:SetObserverMode(OBS_MODE_ROAMING)
-			return
-		else
-			lply:SetPos(spect:GetPos())
-		end
-		
-		local ent = hg.GetCurrentCharacter(spect)
-		if not IsValid(ent) then return end
-		
-		local headBone = ent:LookupBone("ValveBiped.Bip01_Head1") or ent:LookupBone("ValveBiped.Bip01_Spine1") or 1
-		local bon = ent:GetBoneMatrix(headBone)
-		
-		if not bon then 
-			local eyePos = ent:EyePos()
-			if eyePos and eyePos ~= vector_origin then
-				pos = eyePos
-				ang = ent:EyeAngles()
-			else
-				pos = ent:GetPos() + Vector(0, 0, 64)
-				ang = ent:GetAngles()
-			end
-		else
-			pos, ang = bon:GetTranslation(), bon:GetAngles()
-		end
-
-		local eyePos, eyeAng = lply:EyePos(), lply:EyeAngles()
-		
-		local tr = {}
-		tr.start = pos
-		tr.endpos = pos + eyeAng:Forward() * -120
-		tr.filter = {ent, lply, spect}
-		tr.mins = Vector(-4, -4, -4)
-		tr.maxs = Vector(4, 4, 4)
-		tr = util.TraceHull(tr)
-
-		if viewmode == 2 then
-			pos = tr.HitPos + eyeAng:Forward() * 8
-			ang = eyeAng
-		elseif viewmode == 1 then
-			if ent ~= spect and IsValid(ent) then
-				local eyeAtt = ent:GetAttachment(ent:LookupAttachment("eyes"))
-				if eyeAtt then
-					ang = eyeAtt.Ang
-				else
-					ang = spect:EyeAngles()
-				end
-			else
-				ang = spect:EyeAngles()
-			end
-			pos = pos + spect:EyeAngles():Forward() * 8
-		else
-			pos = eyePos
-			ang = eyeAng
-		end
-		
-		ang[3] = 0
-		
-		local view
-		local hg_newspectate = GetConVar("hg_newspectate")
-		if hg_newspectate and hg_newspectate:GetBool() then
-			if not lply.spectLastPos then
-				lply.spectLastPos = pos
-				lply.spectLastAng = ang
-			end
-			
-			local lerpFactor = FrameTime() * 10
-			lply.spectLastPos = LerpVector(lerpFactor, lply.spectLastPos, pos)
-			lply.spectLastAng = LerpAngle(lerpFactor, lply.spectLastAng, ang)
-
-			view = {
-				origin = lply.spectLastPos,
-				angles = lply.spectLastAng,
-				fov = fov,
-			}
-		else
-			view = {
-				origin = pos,
-				angles = ang,
-				fov = fov,
-			}
-		end
-
-		return view
-	else
-		lply.spectLastPos = nil
-		lply.spectLastAng = nil
-		lply:SetObserverMode(OBS_MODE_NONE)
-	end
-end)
-
 zb.fade = zb.fade or 0
 
 hook.Add("RenderScreenspaceEffects", "huyhuyUwU", function()
@@ -262,39 +110,6 @@ hook.Add("RenderScreenspaceEffects", "huyhuyUwU", function()
 end)
 
 zb.ROUND_STATE = 0
-net.Receive("RoundInfo", function()
-	local rnd = net.ReadString()
-	
-	hook.Run("RoundInfoCalled", rnd)
-
-	if zb.CROUND ~= rnd then
-		if hg.DynaMusic then
-			hg.DynaMusic:Stop()
-		end
-	end
-
-	zb.CROUND = rnd
-
-	zb.ROUND_STATE = net.ReadInt(4)
-	
-	if zb.ROUND_STATE == 0 then
-		zb.fade = 7
-	end
-
-	if zb.CROUND ~= "" then
-		if CurrentRound() then
-			if zb.ROUND_STATE == 3 then
-				if CurrentRound().EndRound then
-					CurrentRound():EndRound()
-				end
-			elseif zb.ROUND_STATE == 1 then
-				if CurrentRound().RoundStart then
-					CurrentRound():RoundStart()
-				end
-			end
-		end
-	end
-end)
 
 if IsValid(scoreBoardMenu) then
 	scoreBoardMenu:Remove()
@@ -622,31 +437,6 @@ function GM:ScoreboardShow()
 		surface.SetTextPos(w * 0.5 - lengthX/2,ScreenScale(25))
 		surface.DrawText(txt)
 	end
-	-- TEAMSELECTION
-	if LocalPlayer():Team() ~= TEAM_SPECTATOR then
-		local SPECTATE = vgui.Create("DButton",scoreBoardMenu)
-		SPECTATE:SetPos(sizeX * 0.925,sizeY * 0.095)
-		SPECTATE:SetSize(ScrW() / 20,ScrH() / 30)
-		SPECTATE:SetText("")
-		
-		SPECTATE.DoClick = function()
-			net.Start("ZB_SpecMode")
-				net.WriteBool(true)
-			net.SendToServer()
-			scoreBoardMenu:Remove()
-			scoreBoardMenu = nil
-		end
-
-		SPECTATE.Paint = function(self,w,h)
-			surface.SetDrawColor( 255, 0, 0, 128)
-			surface.DrawOutlinedRect( 0, 0, w, h, 2.5 )
-			surface.SetFont( "ZB_InterfaceMedium" )
-			surface.SetTextColor(col.r,col.g,col.b,col.a)
-			local lengthX, lengthY = surface.GetTextSize("Join")
-			surface.SetTextPos( lengthX - lengthX/2, 2)
-			surface.DrawText("Join")
-		end
-	end
 
 	if LocalPlayer():Team() == TEAM_SPECTATOR then
 		local PLAYING = vgui.Create("DButton",scoreBoardMenu)
@@ -691,7 +481,6 @@ function GM:ScoreboardShow()
 	local disappearance = lply:GetNetVar("disappearance", nil)
 	for i, ply in player.Iterator() do -- надо это говно переделать.
 		if ply:Team() == TEAM_SPECTATOR then continue end
-		if CurrentRound().name == "fear" and !ply:Alive() then continue end
 		if disappearance and ply != lply then continue end
 
 		local but = vgui.Create("DButton", DScrollPanel)
@@ -767,7 +556,6 @@ function GM:ScoreboardShow()
 
 	for i, ply in player.Iterator() do
 		if ply:Team() ~= TEAM_SPECTATOR then continue end
-		if CurrentRound().name == "fear" and !ply:Alive() then continue end
 		if disappearance and ply != lply then continue end
 
 		local but = vgui.Create("DButton", DScrollPanel)

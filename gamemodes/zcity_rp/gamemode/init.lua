@@ -220,12 +220,10 @@ function GM:PlayerSpawn(ply)
         ply.initialspawn = nil
         return
     end
-
-    if CurrentRound() and not CurrentRound().OverrideSpawn then
-        ply:SetTeam(1001)
-        ApplyAppearance(ply,nil,nil,nil,true)
-        ply:SetTeam(zb:BalancedChoice(0, 1))
-    end
+	ply.randoma = 1
+    ply:SetTeam(1001)
+    ApplyAppearance(ply,nil,nil,nil,true)
+    ply:SetTeam(1)
 
 end
 
@@ -235,61 +233,6 @@ end
 RunConsoleCommand("mp_show_voice_icons", "0")
 
 local hullscale = Vector(1, 1, 1)
-
-util.AddNetworkString("ZB_ChooseSpecPly")
-
-net.Receive("ZB_ChooseSpecPly",function(len,ply)
-	if ply:Alive() then return end
-	
-	local key = net.ReadInt(32)
-	local tbl = zb:CheckAlive()
-	
-	if #tbl == 0 then return end
-	
-	ply.chosenspect = ply.chosenspect and isnumber(ply.chosenspect) and ply.chosenspect or 1
-	ply.viewmode = ply.viewmode or 1
-	
-	ply.chosenspect = math.Clamp(ply.chosenspect, 1, #tbl)
-	
-	if key == IN_ATTACK then
-		ply.chosenspect = ply.chosenspect + 1
-		if ply.chosenspect > #tbl then ply.chosenspect = 1 end
-		
-		net.Start("ZB_SpectatePlayer")
-		net.WriteEntity(tbl[ply.chosenspect] or NULL)
-		net.WriteEntity(tbl[ply.chosenspect == 1 and #tbl or ply.chosenspect - 1] or NULL)
-		net.WriteInt(ply.viewmode, 4)
-		net.Send(ply)
-	end
-
-	if key == IN_ATTACK2 then
-		ply.chosenspect = ply.chosenspect - 1
-		if ply.chosenspect < 1 then ply.chosenspect = #tbl end
-		
-		net.Start("ZB_SpectatePlayer")
-		net.WriteEntity(tbl[ply.chosenspect] or NULL)
-		net.WriteEntity(tbl[ply.chosenspect == #tbl and 1 or ply.chosenspect + 1] or NULL)
-		net.WriteInt(ply.viewmode, 4)
-		net.Send(ply)
-	end
-
-	if key == IN_RELOAD then
-		ply.viewmode = (ply.viewmode % 3) + 1  
-		
-		net.Start("ZB_SpectatePlayer")
-		net.WriteEntity(tbl[ply.chosenspect] or NULL)
-		net.WriteEntity(tbl[ply.chosenspect == 1 and #tbl or ply.chosenspect - 1] or NULL)
-		net.WriteInt(ply.viewmode, 4)
-		net.Send(ply)
-	end
-	
-	ply.chosenspect = math.Clamp(ply.chosenspect, 1, #tbl)
-	ply.chosenSpectEntity = tbl[ply.chosenspect]
-	
-	if ply.lastSpectTarget ~= ply.chosenSpectEntity then
-		ply.lastSpectTarget = ply.chosenSpectEntity
-	end
-end)
 
 hook.Add("SetupPlayerVisibility", "spectPVS", function(ply, viewent)
 	if ply:Alive() then return end
@@ -301,55 +244,9 @@ hook.Add("SetupPlayerVisibility", "spectPVS", function(ply, viewent)
 	end
 end)
 
-hook.Add("PlayerDeathThink", "spectNetwork", function(ply)
-	if ply:Alive() then return end
-	//ply:Spectate(OBS_MODE_ROAMING)
-
-	local ent = ply.chosenSpectEntity or player.GetAll()[1]
-	if IsValid(ply) then
-		ply:SetNWEntity("spect", ent)
-		ply:SetNWInt("viewmode", ply.viewmode or 1)
-		if IsValid(ent) then
-			if ent.organism and ply.viewmode == 1 then
-				if (ply.netsendtime or 0) < CurTime() then
-					ply.netsendtime = CurTime() + 1
-
-					hg.send_organism(ent.organism, ply)
-				end
-			end
-			local entr = hg.GetCurrentCharacter(ent)
-			local pos = ent:GetPos()
-			
-			if ply.viewmode ~= 3 then
-				local currentPos = ply:GetPos()
-				local targetPos = pos
-				local distance = currentPos:Distance(targetPos)
-				
-				if distance > 100 or ply.lastSpectTarget ~= ent then
-					ply:SetPos(targetPos)
-					ply.lastSpectTarget = ent
-				end
-			end
-			--print(ply:GetPos())
-		end
-		
-		if ply.viewmode == 3 then
-			if ply:GetMoveType() ~= MOVETYPE_NOCLIP then
-				ply:SetMoveType(MOVETYPE_NOCLIP)
-			end
-			if ply:GetObserverMode() ~= OBS_MODE_ROAMING then
-				ply:Spectate(OBS_MODE_ROAMING)
-			end
-		else
-			if ply:GetMoveType() == MOVETYPE_NOCLIP then
-				ply:SetMoveType(MOVETYPE_WALK)
-			end
-		end
-	end
-end)
 
 function GM:PlayerDeathThink(ply)
-	if not ply:CanSpawn() then return false end
+	return true
 end
 
 function GM:PlayerDeath(ply)
@@ -383,7 +280,7 @@ function GM:PlayerInitialSpawn(ply)
 	if #player.GetAll() == 1 then
 		RunConsoleCommand("bot")
 		hg.addbot = true
-		zb:EndRound()
+		
 	end
 
 	if #player.GetHumans() > 1 and hg.addbot then

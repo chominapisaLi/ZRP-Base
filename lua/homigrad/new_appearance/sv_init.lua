@@ -122,7 +122,9 @@ local tWaitResponse = {}
 
 function ApplyAppearance(Client,tAppearance,bRandom,bResponeIsValid,bUseCahsed)
     if not IsValid(Client) then return end
-    if bRandom or (Client.IsBot and Client:IsBot()) or (Client.IsRagdoll and Client:IsRagdoll()) then
+    if (bRandom or (Client.IsBot and Client:IsBot()) or (Client.IsRagdoll and Client:IsRagdoll())) and (Client.randoma or 1) > 0 then
+        Client.randoma = (Client.randoma or 1) - 1 
+        
         tAppearance = APmodule.GetRandomAppearance()
         WearAppearance(Client,tAppearance)
         return
